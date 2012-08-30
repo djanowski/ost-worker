@@ -3,6 +3,14 @@ require "ost"
 class Ost::Worker
   VERSION = "0.0.1"
 
+  def self.use(middleware)
+    self.middleware << middleware
+  end
+
+  def self.middleware
+    @middleware ||= []
+  end
+
   def self.run(options = {})
     size = options.fetch(:pool, 1)
 
@@ -21,11 +29,23 @@ class Ost::Worker
 
   def run
     queue.each do |item|
-      process(item)
+      chain.call(item)
     end
   end
 
   def process(item)
     raise NotImplementedError
+  end
+
+  def chain
+    chain = self.class.middleware.dup
+
+    chain << -> *args { process(*args) }
+
+    traverse = -> *args do
+      if e = chain.shift
+        e.call(*args, &traverse)
+      end
+    end
   end
 end

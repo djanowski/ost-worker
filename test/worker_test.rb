@@ -25,6 +25,8 @@ class OstWorkerTest < Test::Unit::TestCase
     end
 
     $jobs = []
+
+    $errors = []
   end
 
   def test_worker
